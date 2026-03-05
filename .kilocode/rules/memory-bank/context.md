@@ -2,7 +2,7 @@
 
 ## Current State
 
-**Status**: ✅ TN-LAB VALIDATION COMPLETE - ALL 7 EXPERIMENTS PASSING
+**Status**: ✅ TN-LAB v0.1.1 - NUMERIC STABILITY FIXED
 
 ## Recently Completed
 
@@ -17,6 +17,10 @@
 - [x] Added 4 new theories: MicroTrend, WeakMeanReversion, VolatilityCluster, Drift
 - [x] Fixed NaN bug (hardcoded Array(6) → THEORY_COUNT)
 - [x] Experiment 7: Theory Activation - VolatilityCluster proves pipeline works!
+- [x] **Numeric stability fix**: Added global NaN protection (src/engine/numeric.ts)
+- [x] Safe prediction guards in predict() function
+- [x] Cost sanitization in GEI operator
+- [x] Degenerate case validation in gamma.ts computeStats
 
 ## Experiment Results (Final)
 
@@ -43,6 +47,7 @@ Interesting scientific discovery:
 |----------------|---------|--------|
 | `src/engine/types.ts` | Core types, enums, constants (10 theories) | ✅ Complete |
 | `src/engine/theories.ts` | 10 theory functional families | ✅ Complete |
+| `src/engine/numeric.ts` | Numeric stability utilities (NaN guards) | ✅ Complete |
 | `src/engine/gamma.ts` | Γ: stats compression | ✅ Complete |
 | `src/engine/regime.ts` | R: H → {0,1,2,3} | ✅ Complete |
 | `src/engine/gei.ts` | GEI operator + exploration | ✅ Complete |
@@ -86,6 +91,7 @@ Key constants tuned:
 | Iteration 3 | All 6 experiments passing |
 | Iteration 4 | Theory space enriched (|T|=10), all 6 still passing |
 | Iteration 5 | Fixed NaN bug in exp2_gei, added Exp 7 - all 7 passing |
+| Iteration 6 | Numeric stability fix - added global NaN protection (numeric.ts) |
 
 ## System Validated Properties
 
