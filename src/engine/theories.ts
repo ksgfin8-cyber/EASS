@@ -12,6 +12,7 @@
  */
 
 import { TheoryID, TheoryFamily, SufficientStats, THEORY_COUNT, TN_CONSTANTS } from './types';
+import { guardPrediction, checkMinHistory, sanitize, isValidNumber, EPSILON } from './numeric';
 
 // =============================================================================
 // THEORY FAMILY DESCRIPTORS
@@ -336,26 +337,75 @@ export function predictDrift(
 /**
  * Dispatch prediction to the appropriate theory function.
  * This is the implementation of T_i: H × X_{t-L:t} → ℝ
+ * 
+ * GUARD: Ensures valid output even with degenerate inputs.
  */
 export function predict(
   theoryId: TheoryID,
   stats: SufficientStats,
   prices: number[]
 ): number {
-  switch (theoryId) {
-    case TheoryID.RANDOM_WALK:      return predictRandomWalk(stats, prices);
-    case TheoryID.MEAN_REVERTING:   return predictMeanReverting(stats, prices);
-    case TheoryID.TREND_FOLLOWING:  return predictTrendFollowing(stats, prices);
-    case TheoryID.MOMENTUM:         return predictMomentum(stats, prices);
-    case TheoryID.VOL_BREAKOUT:     return predictVolBreakout(stats, prices);
-    case TheoryID.REGIME_SWITCH:    return predictRegimeSwitch(stats, prices);
-    // NEW: T7-T10
-    case TheoryID.MICRO_TREND:      return predictMicroTrend(stats, prices);
-    case TheoryID.WEAK_MEAN_REVERSION: return predictWeakMeanReversion(stats, prices);
-    case TheoryID.VOLATILITY_CLUSTER:  return predictVolatilityCluster(stats, prices);
-    case TheoryID.DRIFT:            return predictDrift(stats, prices);
-    default:
-      throw new Error(`Unknown theory ID: ${theoryId}`);
+  // GUARD: Check for valid inputs
+  if (!prices || prices.length < 2) {
+    return 100; // Default fallback
+  }
+  
+  const lastPrice = prices[prices.length - 1];
+  
+  // GUARD: Validate last price
+  if (!isValidNumber(lastPrice)) {
+    return 100;
+  }
+  
+  // GUARD: Check for degenerate price window
+  if (checkMinHistory(prices, 2)) {
+    // Check if variance is too low (degenerate case)
+    const returns: number[] = [];
+    for (let i = 1; i < prices.length; i++) {
+      if (isValidNumber(prices[i]) && isValidNumber(prices[i-1])) {
+        returns.push(Math.abs(prices[i] - prices[i-1]));
+      }
+    }
+    const variance = returns.length > 1 
+      ? returns.reduce((s, v) => s + v, 0) / returns.length 
+      : 0;
+    if (variance < EPSILON.VARIANCE) {
+      // Degenerate window - return last price (acts as Random Walk)
+      return lastPrice;
+    }
+  }
+  
+  // GUARD: Check stats validity
+  if (!stats || !isValidNumber(stats.mean) || !isValidNumber(stats.variance)) {
+    // Fall back to Random Walk
+    return lastPrice;
+  }
+  
+  try {
+    let prediction: number;
+    
+    switch (theoryId) {
+      case TheoryID.RANDOM_WALK:      prediction = predictRandomWalk(stats, prices); break;
+      case TheoryID.MEAN_REVERTING:   prediction = predictMeanReverting(stats, prices); break;
+      case TheoryID.TREND_FOLLOWING:  prediction = predictTrendFollowing(stats, prices); break;
+      case TheoryID.MOMENTUM:         prediction = predictMomentum(stats, prices); break;
+      case TheoryID.VOL_BREAKOUT:     prediction = predictVolBreakout(stats, prices); break;
+      case TheoryID.REGIME_SWITCH:    prediction = predictRegimeSwitch(stats, prices); break;
+      // NEW: T7-T10
+      case TheoryID.MICRO_TREND:      prediction = predictMicroTrend(stats, prices); break;
+      case TheoryID.WEAK_MEAN_REVERSION: prediction = predictWeakMeanReversion(stats, prices); break;
+      case TheoryID.VOLATILITY_CLUSTER:  prediction = predictVolatilityCluster(stats, prices); break;
+      case TheoryID.DRIFT:            prediction = predictDrift(stats, prices); break;
+      default:
+        throw new Error(`Unknown theory ID: ${theoryId}`);
+    }
+    
+    // Final GUARD: ensure prediction is valid
+    return guardPrediction(prediction, lastPrice);
+    
+  } catch (error) {
+    // Any error - fall back to Random Walk
+    return lastPrice;
   }
 }
 

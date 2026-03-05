@@ -17,7 +17,8 @@
  * NO React, NO browser APIs. Pure TypeScript math.
  */
 
-import { TheoryID, THEORY_FAMILIES, THEORY_COUNT } from '../engine/types';
+import { TheoryID, THEORY_COUNT } from '../engine/types';
+import { THEORY_FAMILIES } from '../engine/theories';
 import { gei } from '../engine/gei';
 import { computeStats } from '../engine/gamma';
 import { SeededRNG } from '../simulator/marketData';
@@ -113,6 +114,7 @@ function generateDriftSeries(length: number, seed: number): number[] {
  */
 export function runTheoryActivationExperiment(seed: number = 42): {
   passed: boolean;
+  details: string[];
   results: ActivationResult[];
   summary: string;
 } {
@@ -215,7 +217,7 @@ export function runTheoryActivationExperiment(seed: number = 42): {
   
   return {
     passed: allPassed,
-    details,
+    details: details, // For runAll.ts compatibility
     results,
     summary,
   };

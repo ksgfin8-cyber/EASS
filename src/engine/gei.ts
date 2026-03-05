@@ -38,6 +38,7 @@ import {
   predict,
 } from './theories';
 import { isCycleDetected } from './distance';
+import { sanitizeCost, isInvalidCost, safeDiv, EPSILON, isValidNumber } from './numeric';
 
 // =============================================================================
 // MAIN GEI OPERATOR
@@ -246,14 +247,15 @@ export function evaluateTheory(
 
   const cost = Math.max(0, predictionError + instability + complexity + uncertainty + switchingPenalty + regimeAdjustment - exploration);
 
-  // Final guard: if cost is NaN/Infinity, return high cost
-  if (!isFinite(cost)) {
+  // Final guard: sanitize cost using global helper
+  const sanitizedCost = sanitizeCost(cost);
+  if (isInvalidCost(sanitizedCost)) {
     return createInvalidEvaluation(theoryId);
   }
 
   return {
     theoryId,
-    cost: isFinite(cost) ? cost : 100.0,
+    cost: sanitizedCost,
     components: {
       predictionError,
       instability,

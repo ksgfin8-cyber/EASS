@@ -18,6 +18,7 @@
 
 import { SufficientStats, SpectralDensity, TN_CONSTANTS } from './types';
 import { detectRegime } from './regime';
+import { isValidNumber, EPSILON, isPriceWindowDegenerate } from './numeric';
 
 // =============================================================================
 // MAIN Γ OPERATOR
@@ -32,12 +33,23 @@ import { detectRegime } from './regime';
  * @returns SufficientStats H_t
  */
 export function computeStats(prices: number[]): SufficientStats {
-  if (prices.length < 4) {
+  // GUARD: Check for valid input
+  if (!prices || prices.length < 4) {
+    return createEmptyStats();
+  }
+  
+  // GUARD: Check for degenerate price window
+  if (isPriceWindowDegenerate(prices)) {
     return createEmptyStats();
   }
 
   // Compute returns for statistical analysis
   const returns = computeReturns(prices);
+  
+  // GUARD: Check for valid returns
+  if (!returns || returns.length < 2) {
+    return createEmptyStats();
+  }
 
   const mean = computeMean(returns);
   const variance = computeVariance(returns, mean);
