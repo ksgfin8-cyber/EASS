@@ -47,9 +47,9 @@
  *   - Φ(1) ≈ Φ_random_walk (noise dominates)
  * 
  * INTERPRETATION:
- * If confirmed, Φ ∝ Signal-to-Noise Ratio
- * Φ ≈ structure / (structure + noise)
- * This means Φ measures information structural del mercado.
+ * If confirmed, evidence suggests Φ correlates with signal degradation under noise.
+ * This is empirical correlation, NOT proof that Φ = f(SNR).
+ * Further theoretical analysis needed for formal SNR relationship.
  * 
  * NO React, NO browser APIs. Pure TypeScript math.
  */
@@ -381,10 +381,12 @@ export function runNoiseDilutionExperiment(): ExperimentResult {
   console.log('╚════════════════════════════════════════════════════════════════╝');
   
   if (pass) {
-    console.log('✓ STRONG EVIDENCE: Φ measures market structure!');
+    console.log('✓ STRONG EVIDENCE: Φ correlates with signal degradation under noise!');
     console.log('  → Φ decreases monotonically with noise level');
-    console.log('  → Φ ≈ Signal-to-Noise Ratio');
-    console.log('  → This confirms Φ measures information structural del mercado');
+    console.log('  → Evidence suggests Φ tracks structural signal degradation under noise');
+    console.log('  → Correlation: corr(Φ, noise) < -0.7 (strong negative)');
+    console.log('  → NOTE: This shows correlation, NOT direct SNR measurement');
+    console.log('  → Further theoretical analysis needed to establish Φ = f(SNR)');
   } else if (correlation < -0.5) {
     console.log('~ MODERATE EVIDENCE: Φ partially correlates with structure');
     console.log('  → There is a negative relationship between noise and Φ');
@@ -400,8 +402,9 @@ export function runNoiseDilutionExperiment(): ExperimentResult {
   // Signal-to-Noise interpretation
   if (phiAtPureSignal > 0.01 && phiAtPureNoise < 0.05) {
     const snrProxy = phiAtPureSignal / (phiAtPureNoise + 0.001);
-    console.log(`\n→ Signal-to-Noise proxy: Φ(signal)/Φ(noise) ≈ ${snrProxy.toFixed(2)}`);
-    console.log('  This suggests Φ captures structural predictability');
+    console.log(`\n→ Signal-to-Noise proxy ratio: Φ(signal)/Φ(noise) ≈ ${snrProxy.toFixed(2)}x`);
+    console.log('  This suggests Φ captures some aspect of structural predictability');
+    console.log('  → However, this is empirical correlation, not proof of Φ = f(SNR)');
   }
   
   return {

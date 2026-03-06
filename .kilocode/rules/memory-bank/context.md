@@ -1,8 +1,55 @@
-# Active Context: TN-LAB Scientific Stage v5.2
+# Active Context: TN-LAB Scientific Simulation v5.5
 
 ## Current State
 
-**Status**: ✅ TN-LAB v5.2 - INVESTIGACIÓN CIENTÍFICA
+**Status**: ✅ TN-LAB v5.5 - SIMULACIÓN CIENTÍFICA DE MERCADO
+
+## Phase 2: Scientific Market Simulation (NEW)
+
+### Implemented Modules
+
+1. **Data Ingestion Module** (`src/simulator/dataIngestion.ts`)
+   - Yahoo Finance API integration
+   - Support for multiple timeframes (1m, 5m, 15m, 1h, 1d, 1wk, 1mo)
+   - Multiple asset support (stocks, crypto, forex, indices, commodities)
+   - Data validation and cleaning
+   - Caching for reproducibility
+
+2. **Scientific Simulation Engine** (`src/simulator/scientificSimulation.ts`)
+   - Temporal replay: step-by-step market simulation
+   - Full state snapshots at each tick
+   - Scientific logging with experiment IDs
+   - Reproducibility: hash-based experiment tracking
+   - JSON export/import for results
+
+3. **Metrics & Analysis** (`src/simulator/metrics.ts`)
+   - Φ stability metrics (variance, CV, trend, autocorrelation)
+   - Theory dynamics (usage distribution, entropy, transitions)
+   - Regime behavior analysis
+   - Correlation analysis (Φ vs regime, returns, signals)
+   - Sensitivity analysis
+
+4. **Simulation Runner** (`src/simulator/runRealSimulation.ts`)
+   - Pre-configured simulations for AAPL, BTC-USD, ^GSPC
+   - Cross-asset comparison
+   - Report generation (experiment + analysis)
+
+### Asset Presets Available
+
+- `US_EQUITIES`: AAPL, MSFT, GOOGL, AMZN, NVDA, TSLA, META, JPM, V, UNH
+- `CRYPTO`: BTC-USD, ETH-USD, SOL-USD, XRP-USD, DOGE-USD
+- `FOREX`: EURUSD=X, GBPUSD=X, USDJPY=X, AUDUSD=X, USDCAD=X
+- `INDICES`: ^GSPC, ^DJI, ^IXIC, ^RUT, ^VIX
+- `COMMODITIES`: GC=F, SI=F, CL=F, NG=F, HG=F
+- `DIVERSIFIED`: Mixed portfolio for diversity experiments
+- `TECH`: Tech-heavy sector analysis
+
+### Usage
+
+```bash
+# Run real data simulation
+bun run src/simulator/runRealSimulation.ts
+```
 
 ## Recently Completed
 
@@ -124,7 +171,9 @@ Priority: science → understanding → production (not the other way around)
 | Initial | TN-LAB engine + experiments created |
 | v1-v3 | Core experiments 1-7 |
 | v4 | Scientific Stage - Math foundations + Exp 8-10 |
-| **v5.2** | **Investigación Científica - Exp 16 (Noise Dilution)** |
+| v5.2 | Investigación Científica - Exp 16 (Noise Dilution) |
+| v5.4 | Scientific Hardening - Audit fixes |
+| **v5.5** | **Scientific Market Simulation - Real data pipeline** |
 
 ## Key Scientific Discoveries (Expected)
 
@@ -146,9 +195,12 @@ Priority: science → understanding → production (not the other way around)
 ✅ H-space partition geometry
 ✅ Structural stability validated
 ✅ Fractal dimension computation
-✅ **NEW**: Theory landscape geometry
-✅ **NEW**: Markov chain dynamics
-✅ **NEW**: Φ-predictability correlation
-✅ **NEW**: Generator complexity detection
-✅ **NEW**: Theory ensemble entropy analysis
-✅ **NEW**: Noise dilution / Signal-to-Noise detection
+✅ Theory landscape geometry
+✅ Markov chain dynamics
+✅ Φ-predictability correlation
+✅ Generator complexity detection
+✅ Theory ensemble entropy analysis
+✅ Noise dilution / Signal-to-Noise detection
+✅ **NEW**: Real market data ingestion (Yahoo Finance)
+✅ **NEW**: Scientific simulation engine with reproducibility
+✅ **NEW**: Cross-asset analysis capabilities
