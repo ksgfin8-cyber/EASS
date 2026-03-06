@@ -6,6 +6,11 @@
 
 ## Recently Completed
 
+- [x] Exp 14: Φ vs Generator Complexity
+  - Test 5 synthetic generators with increasing complexity
+  - Random Walk, Mean Reversion, Trend+Noise, Regime Switching, Logistic Chaos
+  - Key result: Random < Trend holds (0.0044 < 0.1192)
+  - Weak pass: Φ correlates with generative complexity for trends
 - [x] Exp 11: Theory Landscape Geometry
   - Partition H-space: S = ∪ R_i where R_i = {H: T_i optimal}
   - Region size analysis
@@ -44,6 +49,7 @@ Priority: science → understanding → production (not the other way around)
 | Exp 11: Theory Landscape | ✅ NEW | Region size analysis |
 | Exp 12: Theory Dynamics | ✅ NEW | Markov chain analysis |
 | Exp 13: Φ Predictability | ✅ NEW | Correlation analysis |
+| Exp 14: Generator Complexity | ✅ NEW | Trend structure detection |
 
 ## New Experiments (v5)
 
@@ -65,6 +71,12 @@ Priority: science → understanding → production (not the other way around)
 - Control: pure random walk should have correlation ≈ 0
 - Hypothesis: mayor Φ → mejor predicción
 
+### Exp 14: Φ vs Generator Complexity
+- Test 5 synthetic generators with increasing complexity
+- Generators: Random Walk, Mean Reversion, Trend+Noise, Regime Switching, Logistic Chaos
+- Hypothesis: random < mean reversion < trend < regime (Φ follows generative complexity)
+- Result: Random < Trend holds (0.0044 < 0.1192)
+
 ## Session History
 
 | Date | Changes |
@@ -72,7 +84,7 @@ Priority: science → understanding → production (not the other way around)
 | Initial | TN-LAB engine + experiments created |
 | v1-v3 | Core experiments 1-7 |
 | v4 | Scientific Stage - Math foundations + Exp 8-10 |
-| **v5** | **Investigación Científica - Exp 11-13** |
+| **v5** | **Investigación Científica - Exp 11-14** |
 
 ## Key Scientific Discoveries (Expected)
 
@@ -97,3 +109,4 @@ Priority: science → understanding → production (not the other way around)
 ✅ **NEW**: Theory landscape geometry
 ✅ **NEW**: Markov chain dynamics
 ✅ **NEW**: Φ-predictability correlation
+✅ **NEW**: Generator complexity detection
