@@ -51,8 +51,8 @@ src/
 │
 ├── experiments/         # Scientific experiments
 │   ├── exp1_regime.ts
-│   ├── exp2_gei.ts
-│   ├── exp3_phi.ts
+│   ├── exp2_gei.ts exp3_phi.ts
+│   ├──
 │   ├── ... (exp1-16)
 │   └── runAll.ts
 │
@@ -99,15 +99,15 @@ src/
 ### 2.2 Module Responsibilities
 
 | Module | Responsibility | Public API |
-|--------|---------------|------------|
-| `gamma.ts` | Compress price → stats | `computeStats(prices)` |
-| `regime.ts` | Classify market regime | `detectRegime(stats)` |
-| `gei.ts` | Select best theory | `gei(stats, prices, currentTheory, ...)` |
-| `phi.ts` | Compute decidability | `computePhi(theoryId, stats, prices)` |
-| `theories.ts` | Theory predictions | `predict(theoryId, stats, prices)` |
-| `entropy.ts` | Compute theory entropy | `computeTheoryEntropy(history)` |
-| `distance.ts` | Theory distance + cycles | `theoryDistance(t1, t2, stats, prices)` |
-| `numeric.ts` | Stability guards | `safeDiv`, `isValidNumber`, etc. |
+|--------|----------------|------------|
+| gamma.ts | Compress price → stats | computeStats(prices) |
+| regime.ts | Classify market regime | detectRegime(stats) |
+| gei.ts | Select best theory | gei(stats, prices, currentTheory, ...) |
+| phi.ts | Compute decidability | computePhi(theoryId, stats, prices) |
+| theories.ts | Theory predictions | predict(theoryId, stats, prices) |
+| entropy.ts | Compute theory entropy | computeTheoryEntropy(history) |
+| distance.ts | Theory distance + cycles | theoryDistance(t1, t2, stats, prices) |
+| numeric.ts | Stability guards | safeDiv, isValidNumber, etc. |
 
 ---
 
@@ -153,8 +153,9 @@ Price Update
 
 ### 3.2 Theory Evaluation (Inside GEI)
 
-```
 For each theory T_i:
+
+```
     │
     ├─► E_pred = prediction error
     ├─► V_inst = instability
@@ -208,29 +209,33 @@ interface PhiResult {
 
 ### 4.2 gamma.ts (Γ Operator)
 
-**Purpose**: Compress price history into sufficient statistics
+**Purpose:** Compress price history into sufficient statistics
 
-**Key Functions**:
+**Key Functions:**
+
 - `computeStats(prices: number[]): SufficientStats`
 - `computeHurstRS(prices: number[]): number`
 - `computeAutocorrelation(data: number[], maxLag: number): number[]`
 - `computeSpectralDensity(returns: number[], fftSize: number): SpectralDensity`
 
-**Implementation Notes**:
+**Implementation Notes:**
+
 - FFT uses Cooley-Tukey algorithm (no external dependencies)
 - Hurst via R/S analysis with multiple window sizes
 - Returns computed as log returns for stationarity
 
 ### 4.3 gei.ts (GEI Operator)
 
-**Purpose**: Select the theory with minimum epistemic cost
+**Purpose:** Select the theory with minimum epistemic cost
 
-**Key Functions**:
+**Key Functions:**
+
 - `gei(stats, prices, currentTheory, transitionHistory, tick, theoryUsage): GEIResult`
 - `evaluateTheory(theoryId, stats, prices, currentTheory, theoryUsage): TheoryEvaluation`
 - `updateAdaptiveTheta(currentTheta, currentPhi): number`
 
-**Cost Function Weights**:
+**Cost Function Weights:**
+
 ```typescript
 COST_ALPHA = 0.4    // prediction error
 COST_BETA = 0.2     // instability
@@ -242,9 +247,10 @@ WEIGHT_EXPLORATION = 0.12  // exploration bonus
 
 ### 4.4 phi.ts (Φ Operator)
 
-**Purpose**: Compute market decidability
+**Purpose:** Compute market decidability
 
-**Key Functions**:
+**Key Functions:**
+
 - `computePhi(theoryId, stats, prices): PhiResult`
 - `computeBaselineError(prices): number`
 - `computePhiVariance(phiHistory, windowSize): number`
@@ -252,28 +258,30 @@ WEIGHT_EXPLORATION = 0.12  // exploration bonus
 
 ### 4.5 theories.ts
 
-**Purpose**: Theory predictions and definitions
+**Purpose:** Theory predictions and definitions
 
-**Key Functions**:
+**Key Functions:**
+
 - `predict(theoryId, stats, prices): number`
 - `computePredictionError(theoryId, stats, prices, windowSize): number`
 - `getTheoryComplexity(theoryId): number`
 - `getTheoryOptimalRegime(theoryId): number`
 
-**Theory Implementations** (10 total):
-- Random Walk, Mean Reverting, Trend Following
-- Momentum, Volatility Breakout, Regime Switch
-- Micro Trend, Weak Mean Reversion, Volatility Cluster, Drift
+**Theory Implementations (10 total):**
+
+Random Walk, Mean Reverting, Trend Following, Momentum, Volatility Breakout, Regime Switch, Micro Trend, Weak Mean Reversion, Volatility Cluster, Drift
 
 ### 4.6 regime.ts
 
-**Purpose**: Classify market regime
+**Purpose:** Classify market regime
 
-**Key Functions**:
-- `detectRegime(stats, thresholds): number` → {0,1,2,3}
+**Key Functions:**
+
+- `detectRegime(stats, thresholds): number → {0,1,2,3}`
 - `computeRegimeConfidence(stats, thresholds): {regime, confidence, scores}`
 
-**Default Thresholds**:
+**Default Thresholds:**
+
 ```typescript
 {
   hurstLow: 0.45,
@@ -285,27 +293,30 @@ WEIGHT_EXPLORATION = 0.12  // exploration bonus
 
 ### 4.7 entropy.ts
 
-**Purpose**: Compute theory diversity (Invariant I₅)
+**Purpose:** Compute theory diversity (Invariant I₅)
 
-**Key Functions**:
+**Key Functions:**
+
 - `computeTheoryEntropy(theoryHistory, windowSize): EntropyResult`
 - `maxEntropy(): number`
 - `normalizedEntropy(entropy): number`
 
 ### 4.8 distance.ts
 
-**Purpose**: Theory distance and cycle detection
+**Purpose:** Theory distance and cycle detection
 
-**Key Functions**:
+**Key Functions:**
+
 - `theoryDistance(t1, t2, stats, prices): TheoryDistanceResult`
 - `computeDistanceMatrix(stats, prices): number[][]`
 - `isCycleDetected(from, to, history, tick, stats, prices): CycleDetectionResult`
 
 ### 4.9 numeric.ts
 
-**Purpose**: Numeric stability guards
+**Purpose:** Numeric stability guards
 
-**Key Functions**:
+**Key Functions:**
+
 - `safeDiv(a, b, eps?): number`
 - `isValidNumber(n): boolean`
 - `isPriceWindowDegenerate(prices): boolean`
@@ -318,7 +329,7 @@ WEIGHT_EXPLORATION = 0.12  // exploration bonus
 ### 5.1 Per-Tick Analysis
 
 | Operation | Complexity | Notes |
-|-----------|-----------|-------|
+|-----------|------------|-------|
 | Γ: computeStats | O(n log n) | FFT dominates |
 | R: detectRegime | O(1) | Simple threshold |
 | GEI: evaluate N theories | O(N × L) | N=10, L=lookback |
@@ -328,14 +339,15 @@ WEIGHT_EXPLORATION = 0.12  // exploration bonus
 ### 5.2 Window Analysis
 
 For a window of size L:
-- **Γ**: O(L log L) - FFT
-- **Theories**: O(N × L) - N predictions per step
-- **Φ**: O(L) - baseline comparison
+
+- Γ: O(L log L) - FFT
+- Theories: O(N × L) - N predictions per step
+- Φ: O(L) - baseline comparison
 
 ### 5.3 Scalability
 
 | Window Size | Ticks/Second (est.) |
-|-------------|-------------------|
+|-------------|---------------------|
 | 50 | ~10,000 |
 | 100 | ~5,000 |
 | 200 | ~2,500 |
@@ -388,6 +400,7 @@ interface Transition {
 ### 7.1 No External Dependencies
 
 TN-LAB core is pure TypeScript with:
+
 - No React dependencies
 - No browser APIs
 - No external math libraries (FFT implemented manually)
@@ -396,19 +409,21 @@ TN-LAB core is pure TypeScript with:
 ### 7.2 Portable Targets
 
 The engine can be ported to:
-- **MQL5** (MT5 trading)
-- **Python** (NumPy/SciPy)
-- **C++** (performance critical)
-- **Rust** (safety critical)
+
+- MQL5 (MT5 trading)
+- Python (NumPy/SciPy)
+- C++ (performance critical)
+- Rust (safety critical)
 
 ### 7.3 Porting Checklist
 
 When porting:
-1. ✓ Implement SeededRNG with same algorithm
-2. ✓ Use same FFT implementation (Cooley-Tukey)
-3. ✓ Use same regime thresholds
-4. ✓ Use same cost function weights
-5. ✓ Use same numeric guards
+
+- ✓ Implement SeededRNG with same algorithm
+- ✓ Use same FFT implementation (Cooley-Tukey)
+- ✓ Use same regime thresholds
+- ✓ Use same cost function weights
+- ✓ Use same numeric guards
 
 ---
 
