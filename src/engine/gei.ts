@@ -288,12 +288,13 @@ function createInvalidEvaluation(theoryId: TheoryID): TheoryEvaluation {
 /**
  * Compute baseline error for GEI (random walk one-step-ahead).
  * Used to normalize E_pred in the cost function.
+ * Uses unified EVALUATION_WINDOW constant for consistency with Φ.
  */
 function computeBaselineErrorForGEI(prices: number[]): number {
   const n = prices.length;
   if (n < 2) return 1.0;
   let total = 0;
-  const window = Math.min(20, n - 1);
+  const window = Math.min(TN_CONSTANTS.EVALUATION_WINDOW, n - 1);
   for (let i = n - window - 1; i < n - 1; i++) {
     if (i < 0) continue;
     total += Math.abs(prices[i + 1] - prices[i]);
@@ -309,6 +310,7 @@ function computeBaselineErrorForGEI(prices: number[]): number {
 /**
  * Compute prediction instability for a theory.
  * V_inst = variance of |predicted - actual| over recent window.
+ * Uses unified EVALUATION_WINDOW for consistency with Φ.
  *
  * High instability = theory is inconsistent (bad sign).
  */
@@ -316,7 +318,7 @@ function computeInstability(
   theoryId: TheoryID,
   stats: SufficientStats,
   prices: number[],
-  windowSize: number = 20
+  windowSize: number = TN_CONSTANTS.EVALUATION_WINDOW
 ): number {
   const n = prices.length;
   if (n < 4) return 1.0;

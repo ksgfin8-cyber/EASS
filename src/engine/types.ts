@@ -153,10 +153,12 @@ export interface SpectralDensity {
 }
 
 /**
- * SufficientStats — the compressed memory H_t = Γ(X_0:t)
- * Contains all information needed for theory evaluation.
+ * SufficientStatsCore — Mathematical H-space
+ * H = ℝ^58 × {0,1,2,3}
+ * Contains ONLY information-theoretic sufficient statistics.
+ * This is the formal mathematical output of Γ: ℝ^t → H
  */
-export interface SufficientStats {
+export interface SufficientStatsCore {
   mean: number;
   variance: number;
   skew: number;
@@ -169,6 +171,22 @@ export interface SufficientStats {
   spectrum: SpectralDensity;
   /** R(H) ∈ {0,1,2,3}: 0=ranging, 1=trending, 2=volatile, 3=mixed */
   regime: number;
+}
+
+/**
+ * SufficientStatsMeta — Operational metadata
+ * Information about data collection, NOT part of mathematical H-space.
+ */
+export interface SufficientStatsMeta {
+  sampleSize: number;
+  lastUpdate: Date;
+}
+
+/**
+ * SufficientStats — Complete statistics object
+ * Combines core H-space statistics with operational metadata.
+ */
+export interface SufficientStats extends SufficientStatsCore {
   sampleSize: number;
   lastUpdate: Date;
 }
@@ -323,6 +341,24 @@ export interface TNState {
   };
 }
 
+/**
+ * Invariant verification result
+ */
+export interface InvariantVerification {
+  /** I1: Var(φ) < PHI_VARIANCE_MAX */
+  I1: { satisfied: boolean; variance: number; threshold: number };
+  /** I2: Γ deterministic (always true - inherent property) */
+  I2: { satisfied: boolean; note: string };
+  /** I3: φ ∈ [0, 1] */
+  I3: { satisfied: boolean; phi: number };
+  /** I4: unique active theory */
+  I4: { satisfied: boolean; activeCount: number };
+  /** I5: H(T) > H_MIN */
+  I5: { satisfied: boolean; entropy: number; threshold: number };
+  /** All invariants satisfied */
+  allSatisfied: boolean;
+}
+
 // =============================================================================
 // SIMULATION TICK RESULT
 // =============================================================================
@@ -343,6 +379,8 @@ export interface TickResult {
 // =============================================================================
 
 export const TN_CONSTANTS = {
+  /** Unified evaluation window for E_pred computation in both GEI and Φ */
+  EVALUATION_WINDOW: 50,
   /** Epistemic margin η: theory changes only if C(new) < C(current) - η */
   MARGIN_EPISTEMIC: 0.02,  // Reduced from 0.05 to allow smaller cost improvements to trigger switches
   /** Minimum entropy h_min for I₅ */
