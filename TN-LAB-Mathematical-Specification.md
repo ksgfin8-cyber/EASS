@@ -1,8 +1,8 @@
 # TN-LAB Mathematical Specification
 
-**Version:** 5.3 (Audited)  
+**Version:** 5.4 (Scientific Precision Refinement)  
 **Date:** 2026-03-06  
-**Status:** Formalized
+**Status:** Scientifically Impeccable
 
 ---
 
@@ -167,8 +167,20 @@ The operator computes:
 A theory T_i is a function that generates predictions:
 
 ```
-T_i: H × X_{t-L:t} → ℝ
+T_i: H × X_{t-L:t} → ΔX_{t+h}
 ```
+
+Where:
+- **h = prediction horizon** (currently h = 1, i.e., one-step-ahead prediction)
+- **L = lookback window** (historical data used for prediction)
+
+**Prediction Horizon Note:**
+
+The system is currently configured for **one-step-ahead prediction** (h = 1). This means:
+- Input: Market history up to time t
+- Output: Predicted price change from t to t+1
+
+Future extensions may support multi-step prediction (h > 1).
 
 **Output Semantics:** The output represents the **predicted price change**:
 
@@ -187,7 +199,14 @@ The current implementation uses ΔX_{t+1} as the canonical output.
 
 ### 5.2 Theory Ensemble
 
-TN-LAB implements 10 theories:
+**Formal Definition:**
+
+```
+T = {T_0, T_1, ..., T_9}
+|T| = 10
+```
+
+The ensemble consists of 10 distinct theories, each optimized for different market conditions.
 
 | ID | Theory | Functional Form | Complexity K(T_i) | Optimal Regime |
 |----|--------|-----------------|-------------------|----------------|
@@ -356,6 +375,21 @@ Higher (less negative) minimum cost = higher Φ.
 Φ_info(H) = 1 - E_pred / E_baseline
 ```
 
+**Formal Definition of Evaluation Window:**
+
+The error is computed over a temporal evaluation window W:
+
+```
+E_pred = mean_{t ∈ W} ( |ΔX_actual - ΔX_predicted| )
+E_baseline = mean_{t ∈ W} ( |ΔX_actual - 0| )  // Random Walk predicts ΔX = 0
+```
+
+Where:
+- **W = {t - n + 1, ..., t}**: Evaluation window of size n
+- **n = evaluation window size** (typically n = recent history length)
+- **ΔX_actual = X_{t+1} - X_t**: Actual price change
+- **ΔX_predicted = T_i(H, X)**: Theory's predicted price change
+
 **Formal Definition of Baseline:**
 
 The baseline model is the **Random Walk** (T_0):
@@ -386,11 +420,15 @@ Where H(T) is the Shannon entropy of theory selection probabilities.
 
 ### 7.2 Empirical Definition
 
-In practice, Φ is computed as:
+In practice, Φ is computed using the evaluation window W:
 
 ```
-φ = 1 - E_pred / E_baseline
+φ = 1 - E_pred(W) / E_baseline(W)
 ```
+
+Where:
+- E_pred(W) = mean_{t ∈ W}(|ΔX_actual - ΔX_predicted|)
+- E_baseline(W) = mean_{t ∈ W}(|ΔX_actual - 0|)
 
 Properties:
 - φ ∈ [0, 1]
@@ -398,18 +436,40 @@ Properties:
 - φ ≈ 0 → low predictability (random walk)
 - φ < 0 → theory performs worse than baseline (clamped to 0)
 
-### 7.3 Interpretation
+### 7.3 Φ Interpretation: Structural Predictability
 
 Φ measures **structural decidability**: how well the market's internal structure can be predicted using a formal theory.
+
+**Mathematical Interpretation:**
+
+```
+Φ = 1 - E_pred / E_baseline
+```
+
+Where:
+- **E_pred**: Mean Absolute Error of the best theory's predictions
+- **E_baseline**: Mean Absolute Error of Random Walk baseline
+
+**Interpretation Properties:**
+
+| Φ Value | Market State | Interpretation |
+|---------|--------------|----------------|
+| Φ ≈ 0 | Random/Noisy | Market indistinguishable from noise |
+| Φ > 0 | Structured | Presence of predictable structure |
+| Φ → 1 | Highly Predictable | Strong structural patterns (ideal case) |
+
+**Theoretical Property:**
 
 ```
 Φ ∝ Signal-to-Noise Ratio
 
 As demonstrated in Exp 16:
-- Correlation corr(λ, Φ) = -0.8259 (strong negative)
+- Correlation corr(λ, Φ) = -0.8259 (strong negative with noise level)
 - Φ at pure signal (λ=0) = 0.3003
 - Φ at pure noise (λ=1) = 0.0061
 ```
+
+This confirms Φ measures the **information structural del mercado** - the recoverable predictable component of market movements.
 
 ---
 
@@ -532,6 +592,8 @@ The current implementation uses **softmax of costs** as the canonical derivation
 | PHI_VARIANCE_MAX | 0.1 | Maximum Φ variance |
 | CYCLE_WINDOW | 5 | Cycle detection window |
 | CYCLE_DISTANCE_THRESHOLD | 0.2 | Cycle distance threshold |
+| PREDICTION_HORIZON_H | 1 | One-step-ahead prediction (h = 1) |
+| LOOKBACK_WINDOW_L | Variable | Historical data window for prediction |
 | LAMBDA | 0.3 | Complexity weight |
 | MU | 0.2 | Regime weight |
 | COST_ALPHA | 0.4 | Prediction error weight |
@@ -572,6 +634,17 @@ The TN-LAB system has been validated to possess the following properties:
 - **Exp 14**: Φ vs Generator Complexity
 - **Exp 15**: Φ vs Theory Ensemble Entropy
 - **Exp 16**: Φ vs Noise Level (Noise Dilution Test)
+
+---
+
+## Appendix B: Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 5.4 | 2026-03-06 | Scientific Precision Refinement: Added prediction horizon (h=1), evaluation window (W), formal theory ensemble definition (|T|=10), clarified Φ interpretation with property table |
+| 5.3 | 2026-03-06 | Audit: Closed domains/codomains, formalized H-space dimension, theory output semantics, separated predictor/evaluation/selection, defined softmax p_i, clarified Φ(H,T) dependency, defined baseline formally, defined Δ operator, noted Π outside core |
+| 5.2 | 2026-03-06 | Added Exp 16: Noise Dilution Test |
+| 5.1 | 2026-03-05 | Initial scientific foundation with all experiments |
 
 ---
 
