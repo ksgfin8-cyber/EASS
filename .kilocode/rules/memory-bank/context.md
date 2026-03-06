@@ -1,11 +1,21 @@
-# Active Context: TN-LAB Scientific Stage v5.1
+# Active Context: TN-LAB Scientific Stage v5.2
 
 ## Current State
 
-**Status**: ✅ TN-LAB v5.1 - INVESTIGACIÓN CIENTÍFICA
+**Status**: ✅ TN-LAB v5.2 - INVESTIGACIÓN CIENTÍFICA
 
 ## Recently Completed
 
+- [x] Exp 16: Φ vs Noise Level (Noise Dilution Test)
+  - Test whether Φ measures predictive market structure
+  - Generate series: X_t(λ) = (1-λ) * signal + λ * noise
+  - Correlation: -0.8259 (PASS < -0.7)
+  - Slope dΦ/dλ: -0.2607 (decreases with noise)
+  - Φ at pure signal (λ=0): 0.3003
+  - Φ at pure noise (λ=1): 0.0061
+  - Critical noise level: λ = 0.6 (Φ < 0.01)
+  - Signal-to-Noise proxy: 42.59x
+  - Conclusion: Φ ∝ Signal-to-Noise Ratio - confirms Φ measures market structure
 - [x] Exp 15: Φ vs Theory Ensemble Entropy
   - Test whether Φ ≈ H(T) where H(T) = theory entropy
   - Key finding: H(T) ≈ 2.26 (max entropy) across ALL generators
@@ -57,6 +67,7 @@ Priority: science → understanding → production (not the other way around)
 | Exp 13: Φ Predictability | ✅ NEW | Correlation analysis |
 | Exp 14: Generator Complexity | ✅ NEW | Trend structure detection |
 | Exp 15: Φ vs Entropy | ✅ NEW | Theory ensemble analysis |
+| Exp 16: Noise Dilution | ✅ NEW | SNR correlation analysis |
 
 ## New Experiments (v5)
 
@@ -93,6 +104,19 @@ Priority: science → understanding → production (not the other way around)
 - Conclusion: Φ measures structural decidability, NOT theory entropy
 - This means Φ = 1 - E_pred/E_baseline (prediction error reduction)
 
+### Exp 16: Φ vs Noise Level (Noise Dilution Test)
+- Test whether Φ measures predictive market structure
+- Generate series: X_t(λ) = (1-λ) * signal + λ * noise
+- Test noise levels λ ∈ [0, 1] in steps of 0.1
+- Correlation: -0.8259 (PASS < -0.7)
+- Slope dΦ/dλ: -0.2607 (decreases with noise)
+- Φ at pure signal (λ=0): 0.3003
+- Φ at pure noise (λ=1): 0.0061
+- Critical noise level: λ = 0.6 (Φ < 0.01)
+- Signal-to-Noise proxy: 42.59x
+- Conclusion: Φ ∝ Signal-to-Noise Ratio
+- This confirms Φ measures information structural del mercado
+
 ## Session History
 
 | Date | Changes |
@@ -100,7 +124,7 @@ Priority: science → understanding → production (not the other way around)
 | Initial | TN-LAB engine + experiments created |
 | v1-v3 | Core experiments 1-7 |
 | v4 | Scientific Stage - Math foundations + Exp 8-10 |
-| **v5** | **Investigación Científica - Exp 11-15** |
+| **v5.2** | **Investigación Científica - Exp 16 (Noise Dilution)** |
 
 ## Key Scientific Discoveries (Expected)
 
@@ -127,3 +151,4 @@ Priority: science → understanding → production (not the other way around)
 ✅ **NEW**: Φ-predictability correlation
 ✅ **NEW**: Generator complexity detection
 ✅ **NEW**: Theory ensemble entropy analysis
+✅ **NEW**: Noise dilution / Signal-to-Noise detection
