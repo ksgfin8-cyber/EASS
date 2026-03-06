@@ -1,11 +1,17 @@
-# Active Context: TN-LAB Scientific Stage v5
+# Active Context: TN-LAB Scientific Stage v5.1
 
 ## Current State
 
-**Status**: ✅ TN-LAB v5.0 - INVESTIGACIÓN CIENTÍFICA
+**Status**: ✅ TN-LAB v5.1 - INVESTIGACIÓN CIENTÍFICA
 
 ## Recently Completed
 
+- [x] Exp 15: Φ vs Theory Ensemble Entropy
+  - Test whether Φ ≈ H(T) where H(T) = theory entropy
+  - Key finding: H(T) ≈ 2.26 (max entropy) across ALL generators
+  - Φ varies (0.00-0.12) but entropy stays constant
+  - Correlation: -0.34 (weak/negative)
+  - Conclusion: Φ measures structural decidability, NOT theory entropy
 - [x] Exp 14: Φ vs Generator Complexity
   - Test 5 synthetic generators with increasing complexity
   - Random Walk, Mean Reversion, Trend+Noise, Regime Switching, Logistic Chaos
@@ -50,6 +56,7 @@ Priority: science → understanding → production (not the other way around)
 | Exp 12: Theory Dynamics | ✅ NEW | Markov chain analysis |
 | Exp 13: Φ Predictability | ✅ NEW | Correlation analysis |
 | Exp 14: Generator Complexity | ✅ NEW | Trend structure detection |
+| Exp 15: Φ vs Entropy | ✅ NEW | Theory ensemble analysis |
 
 ## New Experiments (v5)
 
@@ -77,6 +84,15 @@ Priority: science → understanding → production (not the other way around)
 - Hypothesis: random < mean reversion < trend < regime (Φ follows generative complexity)
 - Result: Random < Trend holds (0.0044 < 0.1192)
 
+### Exp 15: Φ vs Theory Ensemble Entropy
+- Test whether Φ is equivalent to entropy of theory ensemble
+- Hypothesis: Φ ≈ H(T) where H(T) = -Σ p_i * log(p_i)
+- Key finding: H(T) ≈ 2.26 (max entropy) across ALL generators
+- Φ varies (0.00-0.12) but entropy stays constant
+- Correlation: -0.34 (weak/negative)
+- Conclusion: Φ measures structural decidability, NOT theory entropy
+- This means Φ = 1 - E_pred/E_baseline (prediction error reduction)
+
 ## Session History
 
 | Date | Changes |
@@ -84,7 +100,7 @@ Priority: science → understanding → production (not the other way around)
 | Initial | TN-LAB engine + experiments created |
 | v1-v3 | Core experiments 1-7 |
 | v4 | Scientific Stage - Math foundations + Exp 8-10 |
-| **v5** | **Investigación Científica - Exp 11-14** |
+| **v5** | **Investigación Científica - Exp 11-15** |
 
 ## Key Scientific Discoveries (Expected)
 
@@ -110,3 +126,4 @@ Priority: science → understanding → production (not the other way around)
 ✅ **NEW**: Markov chain dynamics
 ✅ **NEW**: Φ-predictability correlation
 ✅ **NEW**: Generator complexity detection
+✅ **NEW**: Theory ensemble entropy analysis
