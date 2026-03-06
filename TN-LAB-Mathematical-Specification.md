@@ -1,8 +1,8 @@
 # TN-LAB Mathematical Specification
 
-**Version:** 5.2 (Investigación Científica)  
-**Date:** 2026-03-05  
-**Status:** Finalized
+**Version:** 5.3 (Audited)  
+**Date:** 2026-03-06  
+**Status:** Formalized
 
 ---
 
@@ -71,16 +71,27 @@ The market state is captured in a feature vector:
 H_t = (mean, variance, skew, kurtosis, hurst, autocorr[1:20], spectrum, regime)
 ```
 
-| Component | Type | Description |
-|-----------|------|-------------|
-| mean | ℝ | Mean of log returns |
-| variance | ℝ₊ | Variance of log returns |
-| skew | ℝ | Skewness of returns distribution |
-| kurtosis | ℝ | Excess kurtosis |
-| hurst | [0,1] | Hurst exponent (R/S analysis) |
-| autocorr | ℝ²⁰ | Autocorrelation at lags 1-20 |
-| spectrum | ℝ³³ | Spectral density (FFT, 33 bins) |
-| regime | {0,1,2,3} | Market regime classification |
+**Formal Space Definition:**
+
+```
+H ⊂ ℝ^58 × {0,1,2,3}
+dim(H) = 58 + 1 = 59 dimensions total
+```
+
+The dimension breakdown is:
+- ℝ^58: continuous features (mean, variance, skew, kurtosis, hurst, autocorr[1:20], spectrum[1:33])
+- {0,1,2,3}: categorical regime variable
+
+| Component | Type | Description | Dimension |
+|-----------|------|-------------|----------|
+| mean | ℝ | Mean of log returns | 1 |
+| variance | ℝ₊ | Variance of log returns | 1 |
+| skew | ℝ | Skewness of returns distribution | 1 |
+| kurtosis | ℝ | Excess kurtosis | 1 |
+| hurst | [0,1] | Hurst exponent (R/S analysis) | 1 |
+| autocorr | ℝ²⁰ | Autocorrelation at lags 1-20 | 20 |
+| spectrum | ℝ³³ | Spectral density (FFT, 33 bins) | 33 |
+| regime | {0,1,2,3} | Market regime classification | 1 (categorical) |
 
 ### 3.2 Regime Classification
 
@@ -103,9 +114,30 @@ R(H) =
 The Γ operator compresses raw price history into sufficient statistics:
 
 ```
-Γ: ℝᵗ → H
+Γ: ℝ^t → H
 H_t = Γ(X_0:t)
 ```
+
+**Formal Domain and Codomain:**
+
+```
+Γ: ℝ^t → ℝ^k
+
+where:
+k = dim(H) = 1 + 1 + 1 + 1 + 1 + 20 + 33 + 1 = 58
+
+H_t ∈ ℝ^k × {0,1,2,3}
+```
+
+The dimension breakdown is:
+- 1: mean
+- 1: variance
+- 1: skew
+- 1: kurtosis
+- 1: hurst
+- 20: autocorr[1:20]
+- 33: spectrum[1:33]
+- 1: regime (categorical, encoded as integer)
 
 ### 4.2 Implementation
 
@@ -138,7 +170,20 @@ A theory T_i is a function that generates predictions:
 T_i: H × X_{t-L:t} → ℝ
 ```
 
-More formally, a theory is a **cost function** C(T_i, H) measuring how well the theory explains the market state.
+**Output Semantics:** The output represents the **predicted price change**:
+
+```
+ŷ = T_i(H, X_{t-L:t}) = ΔX_{t+1}
+```
+
+Where ΔX_{t+1} = X_{t+1} - X_t is the expected price movement.
+
+**Alternative Output Forms (for reference):**
+- r_{t+1}: log return prediction
+- P(sign): probability of positive/negative move
+- signal ∈ {-1, 0, 1}: discrete trading signal
+
+The current implementation uses ΔX_{t+1} as the canonical output.
 
 ### 5.2 Theory Ensemble
 
@@ -170,6 +215,42 @@ Where:
 - K_i = Kolmogorov complexity of theory i
 - λ = 0.3 (complexity weight)
 - μ = 0.2 (regime weight)
+
+### 5.4 Three Distinct Concepts
+
+It is critical to distinguish between three concepts that are often conflated:
+
+#### 5.4.1 Predictor (Theory as Function)
+
+```
+T_i: H × X_{t-L:t} → ŷ
+```
+
+The theory as a **predictor** generates forecasts. This is the functional form of the theory.
+
+#### 5.4.2 Evaluation (Cost Function)
+
+```
+C(T_i, H): Theory × State → ℝ
+```
+
+The theory as an **evaluation** measures how well the theory explains the market state. This is a cost (lower is better).
+
+#### 5.4.3 Selection (GEI Operator)
+
+```
+GEI: (T, H) → T*
+GEI(T, H) = argmin_{T_i ∈ T} C(T_i, H)
+```
+
+The theory as **selection** chooses the optimal theory from the ensemble.
+
+**Summary:**
+| Concept | Symbol | Type | Purpose |
+|---------|--------|------|---------|
+| Predictor | T_i(H, X) | Function → ℝ | Generate prediction ŷ |
+| Evaluation | C(T_i, H) | Function → ℝ | Score theory quality |
+| Selection | GEI(T, H) | Operator → T* | Choose best theory |
 
 ---
 
@@ -216,16 +297,48 @@ else if T_i == RandomWalk AND currentRegime != mixed:
 
 Theory changes only occur when the improvement exceeds the epistemic margin:
 
+**Informal Definition:**
+
 ```
 Δ: change theory iff C(new) < C(current) - η
 where η = MARGIN_EPISTEMIC = 0.02
 ```
 
+**Formal Definition:**
+
+```
+Δ: T × T × ℝ → {0, 1}
+Δ(T_current, T_candidate, η) =
+    1 if C(T_candidate, H) < C(T_current, H) - η
+    0 otherwise
+```
+
+Where:
+- T_current ∈ T: Currently active theory
+- T_candidate ∈ T: Candidate theory for switching
+- η = 0.02: Epistemic margin (MARGIN_EPISTEMIC)
+- Output 1: Switch theories
+- Output 0: Maintain current theory
+
 ---
 
 ## 7. The Φ Operator (Decidability)
 
-### 7.1 Three Equivalent Definitions
+### 7.1 Formal Dependency
+
+**Critical Note:** Φ is not a function of H alone. It depends on:
+
+```
+Φ = Φ(H, T)
+```
+
+Where:
+- H ∈ H: Market state (sufficient statistics)
+- T = {T_0, ..., T_9}: Theory ensemble
+
+The dependence on T is often implicit because T is fixed for a given system, but formally Φ varies with the theory ensemble.
+
+### 7.2 Three Equivalent Definitions
 
 Φ can be computed in three equivalent ways:
 
@@ -243,9 +356,25 @@ Higher (less negative) minimum cost = higher Φ.
 Φ_info(H) = 1 - E_pred / E_baseline
 ```
 
+**Formal Definition of Baseline:**
+
+The baseline model is the **Random Walk** (T_0):
+
+```
+E_baseline = E[|X_t - X_{t-1}|] = mean(|r_t|)
+```
+
 Where:
-- E_pred = prediction error of selected theory
-- E_baseline = random walk prediction error
+- **Baseline model**: T_0 (Random Walk) - predicts next price = current price
+- **Error metric**: Mean Absolute Error (MAE)
+- **Alternative metrics** (not used): MSE, RMSE, MAPE
+
+**Explicit Form:**
+
+```
+E_pred = mean(|ΔX_actual - ΔX_predicted|)
+E_baseline = mean(|ΔX_actual - 0|)  // Random Walk predicts ΔX = 0
+```
 
 #### Definition 3: Theory Distribution Entropy
 
@@ -286,7 +415,23 @@ As demonstrated in Exp 16:
 
 ## 8. Action Policy
 
-### 8.1 Definition
+### 8.1 Important Note: Outside Epistemological Core
+
+**The policy Π does NOT belong to the mathematical core of TN-LAB.**
+
+The **epistemological core** consists of:
+- **Γ**: Memory compression operator
+- **GEI**: Theory selection operator
+- **Φ**: Decidability measure
+
+These three operators define the *epistemological* framework: how markets are represented, theories are evaluated, and structural predictability is quantified.
+
+The **policy Π** belongs to the **decision layer** (or trading layer), which is application-specific:
+- It maps theoretical constructs to practical actions
+- It can be replaced without affecting Γ, GEI, or Φ
+- It is the interface between analysis and execution
+
+### 8.2 Definition
 
 The action policy Π maps theory + decidability to trading signals:
 
@@ -335,13 +480,33 @@ The system must maintain theoretical diversity:
 H(T) = -Σ p_i log(p_i) > h_min = 0.5
 ```
 
-If violated, **forced exploration** is triggered to select the least-used theory.
+**Formal Definition of p_i:**
+
+The probability distribution p_i over theories is derived from the **softmax** of the negative cost values:
+
+```
+p_i = softmax(-C(T_i, H))_i = exp(-C(T_i, H)) / Σ_j exp(-C(T_j, H))
+```
+
+This formulation ensures:
+- p_i ∈ (0, 1)
+- Σ_i p_i = 1
+- Lower cost theories have higher probability
+
+**Alternative derivations (for reference):**
+- **Empirical frequency**: p_i = frequency of T_i activation in historical window
+- **Bayesian**: p_i = P(T_i | H) using prior P(T_i)
+- **Historical frequency**: p_i = count(T_i selected) / total selections
+
+The current implementation uses **softmax of costs** as the canonical derivation.
 
 ---
 
 ## 10. Mathematical Summary
 
 ### 10.1 Core Equations
+
+**Epistemological Core (Γ, GEI, Φ):**
 
 | Equation | Description |
 |----------|-------------|
@@ -350,8 +515,13 @@ If violated, **forced exploration** is triggered to select the least-used theory
 | C(T_i, H) | Theory cost function |
 | T* = GEI(T, H) | Theory selection |
 | φ = 1 - E_pred/E_baseline | Decidability |
-| A_t = Π(T_t, φ_t, θ_t) | Action policy |
 | H(T) = -Σ p_i log(p_i) | Theory entropy |
+
+**Decision Layer (Π - Outside Core):**
+
+| Equation | Description |
+|----------|-------------|
+| A_t = Π(T_t, φ_t, θ_t) | Action policy (application-specific) |
 
 ### 10.2 Constants
 
