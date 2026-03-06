@@ -2,7 +2,22 @@
  * TN-LAB Engine — Φ Operator (Decidability)
  * Sistema TN (Tortuga Ninja) v3.0
  *
- * φ_t = Φ(T_t, H_t) = 1 - E_pred(T_t) / E_baseline
+ * Mathematical Foundations (Scientific Stage v4):
+ * 
+ * Φ can be computed in three equivalent ways:
+ * 
+ * 1. Φ_min(H) = -min_i C(T_i, H)
+ *    Negative minimum cost (higher Φ = better theory fit)
+ * 
+ * 2. Φ_entropy(H) = H(theory distribution)  
+ *    Entropy of theory selection probabilities
+ *    Higher entropy = more uncertainty about best theory
+ * 
+ * 3. Φ_info(H) = Information Gain over baseline
+ *    I(T:H) = H(baseline) - H(T|H)
+ * 
+ * Original definition (still used):
+ * φ = Φ(T_t, H_t) = 1 - E_pred(T_t) / E_baseline
  * Φ: T × H → [0, 1]
  *
  * φ ≈ 1 → theory predicts much better than random walk (high decidability)
@@ -299,4 +314,125 @@ export function computeAction(
     default:
       return 0;
   }
+}
+
+// =============================================================================
+// INFORMATION-THEORETIC Φ (Scientific Stage v4)
+// =============================================================================
+
+/**
+ * Φ_min(H) = -min_i C(T_i, H)
+ * 
+ * Negative minimum cost across all theories.
+ * Higher value = better theory fit to market structure.
+ * 
+ * @param costs - Array of costs C(T_i, H) for all theories
+ * @returns Φ_min ∈ (-∞, 0] normalized to [0, 1]
+ */
+export function computePhiMinCost(costs: number[]): number {
+  if (costs.length === 0) return 0;
+  
+  const minCost = Math.min(...costs);
+  const maxCost = Math.max(...costs);
+  
+  // Normalize to [0, 1]: higher is better (more negative = better cost)
+  const range = maxCost - minCost || 1;
+  const normalized = 1 - (minCost - minCost) / range; // = 1 when minCost = minCost
+  
+  // Actually: we want Φ = -minCost, but normalized
+  // If minCost is very negative → high Φ
+  // If minCost ≈ 0 → low Φ
+  const phiMin = -minCost / (Math.abs(maxCost) + 1e-10);
+  
+  return Math.max(0, Math.min(1, phiMin));
+}
+
+/**
+ * Φ_entropy(H) = H(theory distribution)
+ * 
+ * Entropy of theory selection probabilities.
+ * Higher entropy = more uncertainty about which theory fits best.
+ * Lower entropy = clear dominant theory.
+ * 
+ * @param theoryProbabilities - P(T_i) for each theory
+ * @returns H(T) ∈ [0, log(|T|)]
+ */
+export function computePhiEntropy(theoryProbabilities: number[]): number {
+  if (theoryProbabilities.length === 0) return 0;
+  
+  let entropy = 0;
+  const epsilon = 1e-12;
+  
+  for (const p of theoryProbabilities) {
+    if (p > epsilon) {
+      entropy -= p * Math.log(p);
+    }
+  }
+  
+  // Normalize: H_max = log(|T|) = log(10) ≈ 2.30
+  const maxEntropy = Math.log(theoryProbabilities.length);
+  const normalizedEntropy = entropy / maxEntropy;
+  
+  return normalizedEntropy;
+}
+
+/**
+ * Φ_info(H) = Information Gain over baseline
+ * 
+ * I(T:H) = H(baseline) - H(T|H)
+ * 
+ * Measures how much the theory selection reduces uncertainty
+ * compared to a baseline (random walk) hypothesis.
+ * 
+ * @param baselineEntropy - Entropy under baseline (random walk)
+ * @param conditionalEntropy - Entropy given theory selection H(T|H)
+ * @returns Information gain ∈ [0, baselineEntropy]
+ */
+export function computePhiInfoGain(baselineEntropy: number, conditionalEntropy: number): number {
+  const infoGain = baselineEntropy - conditionalEntropy;
+  
+  // Normalize to [0, 1]
+  const maxGain = baselineEntropy || 1;
+  return Math.max(0, Math.min(1, infoGain / maxGain));
+}
+
+/**
+ * Compute all three Φ definitions and return comprehensive result.
+ * 
+ * @param costs - Array of costs C(T_i, H) for all theories
+ * @param probabilities - Theory selection probabilities P(T_i)
+ * @param baselineEntropy - H(baseline) for info gain computation
+ * @returns Object with all three Φ values
+ */
+export function computeAllPhiDefinitions(
+  costs: number[],
+  probabilities: number[],
+  baselineEntropy: number = Math.LN2 // Use 0.693 (binary entropy) as default
+): {
+  phiMin: number;
+  phiEntropy: number;
+  phiInfoGain: number;
+  minCost: number;
+  entropy: number;
+  infoGain: number;
+} {
+  const phiMin = computePhiMinCost(costs);
+  const phiEntropy = computePhiEntropy(probabilities);
+  
+  // Conditional entropy H(T|H) = -Σ p_i log(p_i) = already computed as entropy
+  const conditionalEntropy = probabilities.reduce((sum, p) => {
+    const epsilon = 1e-12;
+    return sum - (p > epsilon ? p * Math.log(p) : 0);
+  }, 0);
+  
+  const phiInfoGain = computePhiInfoGain(baselineEntropy, conditionalEntropy);
+  
+  return {
+    phiMin,
+    phiEntropy,
+    phiInfoGain,
+    minCost: Math.min(...costs),
+    entropy: conditionalEntropy,
+    infoGain: baselineEntropy - conditionalEntropy,
+  };
 }

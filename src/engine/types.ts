@@ -2,6 +2,24 @@
  * TN-LAB Engine — Types
  * Sistema TN (Tortuga Ninja) v3.0
  *
+ * Mathematical Foundations (Scientific Stage v4):
+ * 
+ * 1. DOMAIN DEFINITION:
+ *    Market = (S, T)
+ *    S = {H_t}: window features (sufficient statistics)
+ *    T = {τ}: admissible transformations (time-shift, resample, normalize, noise)
+ *    τ: H → H'
+ *
+ * 2. THEORY DEFINITION:
+ *    T_i: H → P  where P = predictions
+ *    Theory = cost function C(T_i, H)
+ *    Measures how well theory explains market structure
+ *
+ * 3. Φ DEFINITIONS (three equivalent forms):
+ *    Φ_min(H) = -min_i C(T_i, H)          (negative minimum cost)
+ *    Φ_entropy(H) = H(theory distribution) (entropy of theory selection)
+ *    Φ_info(H) = Information Gain over baseline
+ *
  * All core types, interfaces, and enums for the TN engine.
  * This file has ZERO dependencies on React, browser APIs, or Next.js.
  * It is portable to MQL5, Python, C++, or Rust.
@@ -26,6 +44,85 @@ export enum TheoryID {
 }
 
 export const THEORY_COUNT = 10;
+
+// =============================================================================
+// MATHEMATICAL FOUNDATIONS (Scientific Stage v4)
+// =============================================================================
+
+/**
+ * Market Domain Definition
+ * 
+ * Market = (S, T)
+ * - S = {H_t}: set of feature windows (sufficient statistics)
+ * - T = {τ}: admissible transformations
+ * 
+ * Admissible transformations τ: H → H':
+ * - Time shift
+ * - Resampling
+ * - Normalization
+ * - Statistical noise
+ */
+export interface MarketDomain {
+  /** S = {H_t}: feature windows */
+  featureWindows: SufficientStats[];
+  /** T = {τ}: admissible transformations */
+  transformations: Transformation[];
+}
+
+/**
+ * Admissible transformation τ: H → H'
+ * These are the symmetries of the market domain
+ */
+export interface Transformation {
+  id: string;
+  name: string;
+  type: 'time_shift' | 'resample' | 'normalize' | 'noise' | 'composite';
+  /** Apply transformation to stats */
+  apply: (stats: SufficientStats) => SufficientStats;
+}
+
+/**
+ * Theory as mathematical mapping
+ * T_i: H → P where P = predictions
+ * 
+ * More formally: theory = cost function C(T_i, H)
+ * Measures how well theory explains market structure
+ */
+export interface TheoryDefinition {
+  id: TheoryID;
+  name: string;
+  /** Functional form: T_i: H → prediction */
+  mapping: (stats: SufficientStats, prices: number[]) => number;
+  /** Cost function: C(T_i, H) */
+  costFunction: (stats: SufficientStats, prices: number[]) => number;
+  /** Kolmogorov complexity proxy */
+  complexity: number;
+}
+
+/**
+ * Φ - Decidability (three equivalent definitions)
+ * 
+ * 1. Φ_min(H) = -min_i C(T_i, H)
+ *    Negative minimum cost (higher is better)
+ * 
+ * 2. Φ_entropy(H) = H(theory distribution)
+ *    Entropy of theory selection probabilities
+ * 
+ * 3. Φ_info(H) = Information Gain over baseline
+ *    I(T:H) = H(baseline) - H(T|H)
+ */
+export interface PhiDefinition {
+  /** Type of Φ computation */
+  type: 'min_cost' | 'entropy' | 'information_gain';
+  /** Computed Φ value */
+  value: number;
+  /** Method-specific components */
+  components: {
+    minCost?: number;
+    entropy?: number;
+    informationGain?: number;
+  };
+}
 
 /**
  * Functional family descriptor for each theory.
