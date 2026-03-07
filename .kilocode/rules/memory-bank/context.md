@@ -1,8 +1,8 @@
-# Active Context: TN-LAB Scientific Framework v5.6 (CANONICAL)
+# Active Context: TN-LAB Scientific Framework v5.7 (CANONICAL)
 
 ## Current State
 
-**Status**: ✅ TN-LAB v5.6 - CIENTÍFICO CANÓNICO
+**Status**: ✅ TN-LAB v5.7 - CIENTÍFICO CANÓNICO
 **Priority**: science → understanding → production
 
 ---
@@ -179,6 +179,12 @@ This means: **Φ = 1 - E_pred/E_baseline** (prediction error reduction)
 | Exp 19: H-Space Geometry | ✅ PASS | PCA & intrinsic dimension |
 | Exp 20: Mutual Information | ✅ PASS | p=0.34 avg, 0/4 significant |
 
+## Final Experiment (21)
+
+| Experiment | Status | Key Metric |
+|------------|--------|------------|
+| Exp 21: Out-of-Sample Generalization | 🔬 PENDING | mean rank, win_rate, persistence |
+
 ---
 
 # PART IV: INFRASTRUCTURE
@@ -258,6 +264,7 @@ This means: **Φ = 1 - E_pred/E_baseline** (prediction error reduction)
 | v5.4 | v5.4 | Scientific Hardening - Audit fixes |
 | v5.5 | v5.5 | Scientific Market Simulation - Real data pipeline |
 | v5.6 | v5.6 | Phase 3 Scientific Validation - Exp17-20 |
+| v5.7 | v5.7 | Out-of-Sample Generalization - Exp21 created |
 
 ---
 
