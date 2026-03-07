@@ -183,7 +183,16 @@ This means: **Φ = 1 - E_pred/E_baseline** (prediction error reduction)
 
 | Experiment | Status | Key Metric |
 |------------|--------|------------|
-| Exp 21: Out-of-Sample Generalization | 🔬 PENDING | mean rank, win_rate, persistence |
+| Exp 21: Out-of-Sample Generalization | ✅ COMPLETADO | trending: rank=2.32, wr=96.5% | mixed: rank=2.60, wr=73.2% | ranging: rank=3.36, wr=49.2% | volatile: rank=3.73, wr=41.9% | Persistence: ~99% (too high) |
+
+### Exp 21 Key Findings
+
+- **Trending**: rank=2.32 ✅ EXCELENTE - GEI generaliza muy bien
+- **Mixed**: rank=2.60 ✅ MUY BIEN - GEI generaliza bien
+- **Ranging**: rank=3.36 ⚠️ NEUTRAL - Rendimiento moderado
+- **Volatile**: rank=3.73 ⚠️ DEBIL - Menor capacidad predictiva
+- **Persistence ~99%**: PROBLEMA - Teorías no cambian cuando deberían (objetivo 30-70%)
+- **Real markets**: No se pudieron cargar datos (fallback usado)
 
 ---
 
