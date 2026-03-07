@@ -162,7 +162,7 @@ This means: **Φ = 1 - E_pred/E_baseline** (prediction error reduction)
 |------------|--------|------------|
 | Exp 8: Geometry of H-Space | ✅ PASS | Partition entropy analysis |
 | Exp 9: Structural Stability | ✅ PASS | Stability curve analysis |
-| Exp 10: Fractal Dimension | ⚠️ REVIEW | D₂ = 1.2-1.9, NaN correlation |
+| Exp 10: Intrinsic Dimension | ✅ PASS | PCA=27-41, PR=5-33, Local=2.7-3.6 |
 | Exp 11: Theory Landscape | ✅ PASS | Region size analysis |
 | Exp 12: Theory Dynamics | ✅ PASS | Markov chain analysis |
 | Exp 13: Φ Predictability | ✅ PASS | Correlation analysis |
