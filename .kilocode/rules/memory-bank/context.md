@@ -40,6 +40,14 @@
    - Tests 4 generators: Random Walk, Trend, Mean Reversion, Regime Switch
    - 200 samples per generator
 
+4. **Exp20: Φ Predictive Information Test** (`src/experiments/exp20_mutual_information.ts`)
+   - Tests whether Φ_t contains information about future returns r_{t+1}
+   - Estimates mutual information I(Φ_t ; r_{t+1}) using histogram method
+   - Tests 4 assets: AAPL, BTC-USD, ^GSPC, EURUSD=X
+   - Null distribution via Φ shuffling
+   - Statistical significance test (p < 0.05)
+   - 100 Monte Carlo runs for validation
+
 ## Phase 2: Scientific Market Simulation
 
 ### Implemented Modules
@@ -151,6 +159,10 @@ Priority: science → understanding → production (not the other way around)
 | Exp 14: Generator Complexity | ✅ NEW | Trend structure detection |
 | Exp 15: Φ vs Entropy | ✅ NEW | Theory ensemble analysis |
 | Exp 16: Noise Dilution | ✅ NEW | SNR correlation analysis |
+| Exp 17: Market Regimes | ✅ NEW | Regime detection analysis |
+| Exp 18: Falsification Test | ✅ NEW | Structure verification |
+| Exp 19: H-Space Geometry | ✅ NEW | PCA & intrinsic dimension |
+| Exp 20: Mutual Information | ✅ NEW | Predictive information test |
 
 ## New Experiments (v5)
 
@@ -210,6 +222,7 @@ Priority: science → understanding → production (not the other way around)
 | v5.2 | Investigación Científica - Exp 16 (Noise Dilution) |
 | v5.4 | Scientific Hardening - Audit fixes |
 | **v5.5** | **Scientific Market Simulation - Real data pipeline** |
+| **v5.6** | **Phase 3 Scientific Validation - Exp17-20** |
 
 ## Key Scientific Discoveries (Expected)
 
