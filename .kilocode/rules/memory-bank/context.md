@@ -2,9 +2,45 @@
 
 ## Current State
 
-**Status**: ✅ TN-LAB v5.5 - SIMULACIÓN CIENTÍFICA DE MERCADO
+**Status**: ✅ TN-LAB v5.6 - SCIENTIFIC VALIDATION PHASE
 
-## Phase 2: Scientific Market Simulation (NEW)
+## Phase 3: Scientific Validation (NEW - v5.6)
+
+### Infrastructure Implemented
+
+1. **MonteCarloRunner** (`src/simulator/scientificSimulation.ts`)
+   - N ≥ 500 simulations per experiment
+   - Reports: mean, std, 95% CI
+   - Scientific versioning for reproducibility
+
+2. **Lookahead Bias Verification** (`src/simulator/scientificSimulation.ts`)
+   - Documents Γ uses only past data
+   - Pipeline timing verification
+   - No future information leakage
+
+3. **H-Space Dimension Analysis** (`src/simulator/metrics.ts`)
+   - PCA for variance explanation
+   - Intrinsic dimension estimation (eigengap method)
+   - Cluster analysis
+
+### Experiments Implemented
+
+1. **Exp17: Φ vs Real Market Regimes** (`src/experiments/exp17_regimes.ts`)
+   - Tests 5 regimes: Bull, Bear, Ranging, Volatile, Crisis
+   - Hypothesis: Φ should decrease during crisis/volatile regimes
+   - 100 Monte Carlo runs per regime
+
+2. **Exp18: Φ Falsification Test** (`src/experiments/exp18_falsification.ts`)
+   - Tests if Φ responds correctly to known structure
+   - Generators: Random Walk, Weak/Medium/Strong Trend, Mean Reversion
+   - 100 Monte Carlo runs per generator
+
+3. **Exp19: Geometry of Market State Space** (`src/experiments/exp19_geometry.ts`)
+   - Analyzes H-space using PCA and intrinsic dimension
+   - Tests 4 generators: Random Walk, Trend, Mean Reversion, Regime Switch
+   - 200 samples per generator
+
+## Phase 2: Scientific Market Simulation
 
 ### Implemented Modules
 
