@@ -162,7 +162,7 @@ Priority: science → understanding → production (not the other way around)
 | Exp 17: Market Regimes | ✅ NEW | Regime detection analysis |
 | Exp 18: Falsification Test | ✅ NEW | Structure verification |
 | Exp 19: H-Space Geometry | ✅ NEW | PCA & intrinsic dimension |
-| Exp 20: Mutual Information | ✅ NEW | Predictive information test |
+| Exp 20: Mutual Information | ✅ NEW | Predictive information test - Φ does NOT contain predictive information (p=0.34 avg, 0/4 assets significant) |
 
 ## New Experiments (v5)
 
