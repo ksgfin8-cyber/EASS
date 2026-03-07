@@ -184,6 +184,7 @@ This means: **Φ = 1 - E_pred/E_baseline** (prediction error reduction)
 | Experiment | Status | Key Metric |
 |------------|--------|------------|
 | Exp 21: Out-of-Sample Generalization | ✅ COMPLETADO | trending: rank=2.32, wr=96.5% | mixed: rank=2.60, wr=73.2% | ranging: rank=3.36, wr=49.2% | volatile: rank=3.73, wr=41.9% | Persistence: ~99% (too high) |
+| Exp 22: GEI Persistence Diagnostics | ✅ COMPLETADO | Persistence: 99.8% | Score Gap: 0.0946 | Entropy: 0.010 | Γ Drift: 0.036 |
 
 ### Exp 21 Key Findings
 
@@ -193,6 +194,21 @@ This means: **Φ = 1 - E_pred/E_baseline** (prediction error reduction)
 - **Volatile**: rank=3.73 ⚠️ DEBIL - Menor capacidad predictiva
 - **Persistence ~99%**: PROBLEMA - Teorías no cambian cuando deberían (objetivo 30-70%)
 - **Real markets**: No se pudieron cargar datos (fallback usado)
+
+### Exp 22 Key Findings
+
+- **Persistence**: 99.8% (target: 30-70%) - CONFIRMA PROBLEMA
+- **Score Gap**: mean=0.0946, median=0.09 - Significativo (>0.05), teorías tienen claro ganador
+- **Theory Entropy (norm)**: 0.010 - MUY BAJO (<0.2), siempre selecciona la misma teoría
+- **Γ Drift**: mean=0.036 (<0.1) - MUY BAJO, estado del mercado parece estable
+
+**Root Cause Analysis**:
+- B) Theory selection has minimal diversity (always same theory)
+- C) Γ state appears stable (low drift between windows)
+
+**Conclusion**: GEI persistence alta NO es por diferencias pequeñas de score (gap=0.09 es significativo).
+Es porque: (1) teoría se "pega" al detectar estructura estable, (2) Γ drift muy bajo = mercado parece estacionario.
+Esto es estructural en el diseño de GEI, no un bug.
 
 ---
 
