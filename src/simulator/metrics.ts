@@ -959,3 +959,276 @@ export function generateAnalysisReport(
 
   return report;
 }
+
+// =============================================================================
+// H-SPACE DIMENSION ANALYSIS (Phase 3)
+// =============================================================================
+
+/**
+ * Result of PCA analysis on H-space
+ */
+export interface PCAResult {
+  /** Eigenvalues (variance explained by each component) */
+  eigenvalues: number[];
+  /** Explained variance ratio for each component */
+  explainedVarianceRatio: number[];
+  /** Cumulative explained variance */
+  cumulativeVariance: number[];
+  /** Number of components needed for 95% variance */
+  componentsFor95Variance: number;
+  /** Effective dimension (using Kaiser criterion: eigenvalue > 1) */
+  kaiserDimension: number;
+  /** First 3 principal components (if available) */
+  components?: number[][];
+}
+
+/**
+ * Result of intrinsic dimension estimation
+ */
+export interface IntrinsicDimResult {
+  /** Estimated intrinsic dimension */
+  dimension: number;
+  /** Method used */
+  method: 'eigengap' | 'CorrelationDimension' | 'PCA';
+  /** Confidence/quality metric */
+  quality: number;
+  /** Details from the estimation */
+  details: Record<string, number>;
+}
+
+/**
+ * Perform PCA on H-space data
+ * 
+ * @param hVectors - Array of H-space vectors (each is number[])
+ * @returns PCA result with eigenvalues, variance explained, effective dimension
+ */
+export function computePCA(hVectors: number[][]): PCAResult {
+  if (hVectors.length < 2) {
+    throw new Error('Need at least 2 H-vectors for PCA');
+  }
+  
+  const n = hVectors.length;
+  const dim = hVectors[0].length;
+  
+  // Center the data
+  const means = new Array(dim).fill(0);
+  for (const v of hVectors) {
+    for (let i = 0; i < dim; i++) {
+      means[i] += v[i];
+    }
+  }
+  for (let i = 0; i < dim; i++) {
+    means[i] /= n;
+  }
+  
+  const centered = hVectors.map(v => 
+    v.map((x, i) => x - means[i])
+  );
+  
+  // Compute covariance matrix
+  const cov: number[][] = Array(dim).fill(0).map(() => Array(dim).fill(0));
+  for (const v of centered) {
+    for (let i = 0; i < dim; i++) {
+      for (let j = 0; j < dim; j++) {
+        cov[i][j] += v[i] * v[j] / (n - 1);
+      }
+    }
+  }
+  
+  // Power iteration for top eigenvalues (simplified)
+  // For full PCA, would use SVD or eigendecomposition
+  const eigenvalues: number[] = [];
+  const maxIterations = 100;
+  let remainingCov = cov.map(row => [...row]);
+  
+  for (let comp = 0; comp < dim; comp++) {
+    // Power iteration to find largest eigenvalue
+    let vector = new Array(dim).fill(0).map(() => Math.random());
+    let norm = Math.sqrt(vector.reduce((s, x) => s + x * x, 0));
+    vector = vector.map(x => x / norm);
+    
+    for (let iter = 0; iter < maxIterations; iter++) {
+      const newVec = new Array(dim).fill(0);
+      for (let i = 0; i < dim; i++) {
+        for (let j = 0; j < dim; j++) {
+          newVec[i] += remainingCov[i][j] * vector[j];
+        }
+      }
+      norm = Math.sqrt(newVec.reduce((s, x) => s + x * x, 0));
+      if (norm < 1e-10) break;
+      vector = newVec.map(x => x / norm);
+    }
+    
+    // Compute eigenvalue
+    const eigenval = vector.reduce((s, x, i) => 
+      s + vector[i] * (remainingCov[i].reduce((ss, y) => ss + y * vector[i], 0)), 0
+    );
+    eigenvalues.push(Math.max(0, eigenval));
+    
+    // Deflate covariance matrix
+    if (comp < dim - 1) {
+      for (let i = 0; i < dim; i++) {
+        for (let j = 0; j < dim; j++) {
+          remainingCov[i][j] -= eigenval * vector[i] * vector[j];
+        }
+      }
+    }
+  }
+  
+  // Sort eigenvalues descending
+  eigenvalues.sort((a, b) => b - a);
+  
+  // Variance explained
+  const totalVar = eigenvalues.reduce((s, x) => s + x, 0);
+  const explainedVarianceRatio = eigenvalues.map(e => e / totalVar);
+  
+  // Cumulative variance
+  const cumulativeVariance: number[] = [];
+  let cumSum = 0;
+  for (const e of explainedVarianceRatio) {
+    cumSum += e;
+    cumulativeVariance.push(cumSum);
+  }
+  
+  // Components for 95% variance
+  const componentsFor95Variance = cumulativeVariance.findIndex(v => v >= 0.95) + 1;
+  
+  // Kaiser criterion: eigenvalue > 1 (for standardized data)
+  // Since we're using covariance (not correlation), normalize
+  const kaiserDimension = eigenvalues.filter(e => e > totalVar / dim).length;
+  
+  return {
+    eigenvalues,
+    explainedVarianceRatio,
+    cumulativeVariance,
+    componentsFor95Variance,
+    kaiserDimension,
+  };
+}
+
+/**
+ * Estimate intrinsic dimension using eigengap heuristic
+ * 
+ * The eigengap heuristic looks for the largest gap between
+ * consecutive eigenvalues - this suggests the true dimension.
+ * 
+ * @param eigenvalues - PCA eigenvalues
+ * @returns Intrinsic dimension estimate
+ */
+export function estimateIntrinsicDimension(eigenvalues: number[]): IntrinsicDimResult {
+  // Compute eigengaps
+  const eigengaps: number[] = [];
+  for (let i = 0; i < eigenvalues.length - 1; i++) {
+    eigengaps.push(eigenvalues[i] - eigenvalues[i + 1]);
+  }
+  
+  // Find maximum eigengap
+  let maxGap = -1;
+  let maxGapIdx = 0;
+  for (let i = 0; i < eigengaps.length; i++) {
+    if (eigengaps[i] > maxGap) {
+      maxGap = eigengaps[i];
+      maxGapIdx = i;
+    }
+  }
+  
+  // Intrinsic dimension is typically at the gap + 1
+  const dimension = maxGapIdx + 1;
+  
+  // Quality is normalized gap size
+  const avgEigenvalue = eigenvalues.reduce((s, x) => s + x, 0) / eigenvalues.length;
+  const quality = maxGap / avgEigenvalue;
+  
+  return {
+    dimension,
+    method: 'eigengap',
+    quality,
+    details: {
+      maxEigengap: maxGap,
+      maxEigengapIndex: maxGapIdx,
+      avgEigenvalue,
+    },
+  };
+}
+
+/**
+ * Full H-space geometry analysis
+ */
+export interface HSpaceGeometry {
+  /** PCA results */
+  pca: PCAResult;
+  /** Intrinsic dimension */
+  intrinsicDim: IntrinsicDimResult;
+  /** Raw eigenvalues for further analysis */
+  eigenvalues: number[];
+  /** Number of samples analyzed */
+  nSamples: number;
+  /** Original dimension */
+  originalDim: number;
+}
+
+/**
+ * Analyze the geometry of H-space
+ * 
+ * @param hVectors - Array of H-space vectors from simulation
+ * @returns Complete geometry analysis
+ */
+export function analyzeHSpaceGeometry(hVectors: number[][]): HSpaceGeometry {
+  const nSamples = hVectors.length;
+  const originalDim = hVectors[0].length;
+  
+  const pca = computePCA(hVectors);
+  const intrinsicDim = estimateIntrinsicDimension(pca.eigenvalues);
+  
+  return {
+    pca,
+    intrinsicDim,
+    eigenvalues: pca.eigenvalues,
+    nSamples,
+    originalDim,
+  };
+}
+
+/**
+ * Format H-space geometry as markdown
+ */
+export function formatHSpaceGeometryReport(analysis: HSpaceGeometry): string {
+  const { pca, intrinsicDim, eigenvalues, nSamples, originalDim } = analysis;
+  
+  let report = `# H-Space Geometry Analysis
+
+## Overview
+- **Samples**: ${nSamples}
+- **Original Dimension**: ${originalDim}
+- **Estimated Intrinsic Dimension**: ${intrinsicDim.dimension} (${intrinsicDim.method})
+- **Intrinsic Dimension Quality**: ${intrinsicDim.quality.toFixed(4)}
+
+## PCA Results
+
+### Eigenvalues (Top 10)
+| Component | Eigenvalue | Variance % | Cumulative % |
+|-----------|------------|------------|--------------|
+`;
+  
+  for (let i = 0; i < Math.min(10, eigenvalues.length); i++) {
+    report += `| ${i + 1} | ${eigenvalues[i].toFixed(4)} | ${(pca.explainedVarianceRatio[i] * 100).toFixed(2)}% | ${(pca.cumulativeVariance[i] * 100).toFixed(2)}% |\n`;
+  }
+  
+  report += `
+### Dimensionality Summary
+- **Components for 95% Variance**: ${pca.componentsFor95Variance}
+- **Kaiser Dimension** (eigenvalue > mean): ${pca.kaiserDimension}
+- **Effective Compression**: ${((1 - pca.componentsFor95Variance / originalDim) * 100).toFixed(1)}% reduction
+
+## Interpretation
+
+The H-space has intrinsic dimension **${intrinsicDim.dimension}** out of ${originalDim} possible dimensions.
+This suggests the market state space can be effectively described with fewer
+variables than the full ${originalDim}-dimensional representation.
+
+---
+*Generated by TN-LAB H-Space Geometry Analyzer v5.5*
+`;
+  
+  return report;
+}

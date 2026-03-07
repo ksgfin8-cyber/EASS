@@ -737,3 +737,255 @@ export function generateExperimentReport(result: SimulationResult): string {
 
   return report;
 }
+
+// =============================================================================
+// PHASE 3: MONTE CARLO RUNNER (Scientific Validation Framework)
+// =============================================================================
+
+/**
+ * Scientific versioning for experiments
+ * Ensures reproducibility and comparability of results
+ */
+export interface ScientificVersion {
+  engineVersion: string;
+  constantsVersion: string;
+  theorySetVersion: string;
+  datasetHash: string;
+  timestamp: string;
+}
+
+/**
+ * Monte Carlo result with full statistical reporting
+ */
+export interface MonteCarloResult<T> {
+  /** Number of simulations */
+  nRuns: number;
+  /** Mean of the metric */
+  mean: number;
+  /** Standard deviation */
+  std: number;
+  /** Standard error */
+  standardError: number;
+  /** 95% Confidence Interval */
+  ci95: [number, number];
+  /** Min value */
+  min: number;
+  /** Max value */
+  max: number;
+  /** Median */
+  median: number;
+  /** All individual run results */
+  runs: T[];
+  /** Version info for reproducibility */
+  version: ScientificVersion;
+}
+
+/**
+ * Type for experiment runner function
+ */
+export type ExperimentRunner<T> = (seed: number) => Promise<T> | T;
+
+/**
+ * Run Monte Carlo simulation with statistical analysis
+ * 
+ * @param runner - Experiment function that takes a seed and returns a result
+ * @param nRuns - Number of simulations (recommended N ≥ 500)
+ * @param baseSeed - Base seed for reproducibility (each run uses baseSeed + i)
+ * @param version - Scientific version info
+ * @returns MonteCarloResult with mean, std, CI95
+ */
+export async function runMonteCarlo<T>(
+  runner: ExperimentRunner<T>,
+  nRuns: number,
+  baseSeed: number,
+  version: ScientificVersion
+): Promise<MonteCarloResult<T>> {
+  const runs: T[] = [];
+  
+  console.log(`\n🎲 Starting Monte Carlo: ${nRuns} runs`);
+  
+  for (let i = 0; i < nRuns; i++) {
+    const seed = baseSeed + i;
+    const result = await runner(seed);
+    runs.push(result);
+    
+    if ((i + 1) % 100 === 0) {
+      console.log(`  Progress: ${i + 1}/${nRuns}`);
+    }
+  }
+  
+  // Extract numeric values for statistics (assuming result is number or has 'phi' property)
+  const values = runs.map(r => {
+    if (typeof r === 'number') return r;
+    const rObj = r as Record<string, unknown>;
+    if (typeof rObj.phi === 'number') return rObj.phi as number;
+    if (typeof rObj.value === 'number') return rObj.value as number;
+    // Try to find any numeric property
+    for (const key of Object.keys(rObj)) {
+      if (typeof rObj[key] === 'number') return rObj[key] as number;
+    }
+    return NaN;
+  }).filter(v => !isNaN(v));
+  
+  if (values.length === 0) {
+    throw new Error('Could not extract numeric values from experiment results');
+  }
+  
+  // Sort for percentile calculations
+  const sorted = [...values].sort((a, b) => a - b);
+  const n = sorted.length;
+  
+  // Mean
+  const mean = sorted.reduce((s, v) => s + v, 0) / n;
+  
+  // Standard deviation
+  const variance = sorted.reduce((s, v) => s + (v - mean) ** 2, 0) / n;
+  const std = Math.sqrt(variance);
+  
+  // Standard error
+  const standardError = std / Math.sqrt(n);
+  
+  // 95% CI (using percentile method)
+  const lowerIdx = Math.floor(n * 0.025);
+  const upperIdx = Math.floor(n * 0.975);
+  const ci95: [number, number] = [sorted[lowerIdx], sorted[upperIdx]];
+  
+  // Min, max, median
+  const min = sorted[0];
+  const max = sorted[n - 1];
+  const median = n % 2 === 0 
+    ? (sorted[n / 2 - 1] + sorted[n / 2]) / 2 
+    : sorted[Math.floor(n / 2)];
+  
+  console.log(`\n✅ Monte Carlo Complete:`);
+  console.log(`   Mean: ${mean.toFixed(4)}`);
+  console.log(`   Std:  ${std.toFixed(4)}`);
+  console.log(`   CI95: [${ci95[0].toFixed(4)}, ${ci95[1].toFixed(4)}]`);
+  
+  return {
+    nRuns,
+    mean,
+    std,
+    standardError,
+    ci95,
+    min,
+    max,
+    median,
+    runs,
+    version,
+  };
+}
+
+/**
+ * Get current scientific version for TN-LAB
+ */
+export function getScientificVersion(datasetHash: string = 'unknown'): ScientificVersion {
+  return {
+    engineVersion: '5.5.0',
+    constantsVersion: '1.0.0',
+    theorySetVersion: '1.0.0',
+    datasetHash,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Format Monte Carlo result as markdown report
+ */
+export function formatMonteCarloReport(
+  name: string,
+  description: string,
+  result: MonteCarloResult<unknown>
+): string {
+  return `# Monte Carlo Analysis: ${name}
+
+## Description
+${description}
+
+## Configuration
+- **N Runs**: ${result.nRuns}
+- **Base Seed**: ${result.version.timestamp}
+
+## Results
+| Metric | Value |
+|--------|-------|
+| Mean | ${result.mean.toFixed(4)} |
+| Std Dev | ${result.std.toFixed(4)} |
+| Standard Error | ${result.standardError.toFixed(4)} |
+| 95% CI Lower | ${result.ci95[0].toFixed(4)} |
+| 95% CI Upper | ${result.ci95[1].toFixed(4)} |
+| Min | ${result.min.toFixed(4)} |
+| Max | ${result.max.toFixed(4)} |
+| Median | ${result.median.toFixed(4)} |
+
+## Version Info
+- Engine: ${result.version.engineVersion}
+- Constants: ${result.version.constantsVersion}
+- Theory Set: ${result.version.theorySetVersion}
+- Dataset: ${result.version.datasetHash}
+- Timestamp: ${result.version.timestamp}
+
+---
+*Generated by TN-LAB Monte Carlo Runner v5.5*
+`;
+}
+
+// =============================================================================
+// LOOKAHEAD BIAS VERIFICATION
+// =============================================================================
+
+/**
+ * LOOKAHEAD BIAS VERIFICATION
+ * 
+ * This section documents that the TN-LAB system does NOT use future information.
+ * 
+ * CRITICAL: Lookahead bias would invalidate all experimental results.
+ * 
+ * VERIFICATION OF Γ: ℝᵗ → H (Statistics Extractor)
+ * 
+ * The Γ operator computes sufficient statistics from historical data only.
+ * At time t, Γ(X_0:t) depends ONLY on X_0, X_1, ..., X_t (past and present).
+ * 
+ * Implementation check:
+ * - computeStats() in gamma.ts uses a sliding window [t-lookback, t]
+ * - NO references to X_{t+k} for k > 0
+ * - Window is strictly bounded by lookbackWindow parameter
+ * 
+ * VERIFICATION OF GEI: Theory Selection
+ * 
+ * The GEI operator selects theory based on current H state only.
+ * - Input: SufficientStats (computed from past data)
+ * - Output: TheoryID (selected based on current state)
+ * - NO future information used
+ * 
+ * VERIFICATION OF Φ: Predictability Measure
+ * 
+ * The Φ operator computes predictability from historical patterns:
+ * - Uses past prediction errors only
+ * - Computes reduction in prediction error vs baseline
+ * - NO future data in computation
+ * 
+ * SIMULATION PIPELINE TIMING:
+ * 
+ * For each tick t:
+ *   1. Get price X_t
+ *   2. Update history: H_t = Γ(X_0:t)      ← ONLY past data
+ *   3. Select theory: T_t = GEI(H_t)        ← ONLY current H
+ *   4. Compute prediction: pred_t           ← Using T_t
+ *   5. Compute Φ_t                          ← Using past errors
+ *   6. Observe outcome: X_{t+1}            ← NEXT tick (not used yet)
+ * 
+ * DATA HANDLING:
+ * 
+ * - Historical data is fetched in batches
+ * - Each batch is processed sequentially
+ * - No out-of-order processing
+ * - Reproducible via seed control
+ * 
+ * TESTING:
+ * 
+ * To verify no lookahead bias:
+ * 1. Run simulation with known data
+ * 2. Check that Φ computed at time t does NOT correlate with X_{t+k} for k > 0
+ * 3. This is tested in Exp13 (Φ vs Predictability)
+ */
